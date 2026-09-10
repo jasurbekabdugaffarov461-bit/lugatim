@@ -1,0 +1,18 @@
+services:
+  server:
+    build: .
+    container_name: lugatim-server
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET}
+      DATA_DIR: /app/data
+    volumes:
+      - server_data:/app/data
+      - server_uploads:/app/uploads
+    ports:
+      - "${SERVER_PORT:-4000}:4000"
+
+volumes:
+  server_data:
+  server_uploads:
