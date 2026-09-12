@@ -11,7 +11,7 @@ services:
       - server_data:/app/data
       - server_uploads:/app/uploads
     ports:
-      - "${SERVER_PORT:-4000}:4000"
+      - "${SERVER_PORT:-4010}:4000"
 
 volumes:
   server_data:
