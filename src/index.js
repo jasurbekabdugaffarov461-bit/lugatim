@@ -11,6 +11,7 @@ const wordsRoutes = require('./routes/words');
 const usersRoutes = require('./routes/users');
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(cors());
 app.use(express.json());
