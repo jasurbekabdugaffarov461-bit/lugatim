@@ -5,6 +5,8 @@ const multer = require('multer');
 const db = require('../db');
 const { authRequired } = require('../middleware/auth');
 const { publicUser } = require('../utils/publicUser');
+const telegram = require('../lib/telegram');
+const { ensureLinkCode } = require('./telegram');
 
 const router = express.Router();
 router.use(authRequired);
@@ -71,6 +73,30 @@ router.delete('/me/avatar', (req, res) => {
 
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
   res.json({ user: publicUser(updated, req) });
+});
+
+router.put('/me/push-token', (req, res) => {
+  const { pushToken } = req.body || {};
+  if (!pushToken || typeof pushToken !== 'string') {
+    return res.status(400).json({ error: 'pushToken kiritilishi shart' });
+  }
+
+  db.prepare('UPDATE users SET push_token = ? WHERE id = ?').run(pushToken, req.userId);
+  res.status(204).end();
+});
+
+router.get('/me/telegram-link', async (req, res) => {
+  if (!telegram.isConfigured()) {
+    return res.status(503).json({ error: 'Telegram bot hali sozlanmagan' });
+  }
+
+  try {
+    const username = await telegram.getBotUsername();
+    const code = ensureLinkCode(req.userId);
+    res.json({ url: `https://t.me/${username}?start=${code}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Telegram havolasini olib bo\'lmadi' });
+  }
 });
 
 module.exports = router;

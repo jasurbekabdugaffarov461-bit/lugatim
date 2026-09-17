@@ -7,6 +7,7 @@ services:
       PORT: 4000
       JWT_SECRET: ${JWT_SECRET}
       DATA_DIR: /app/data
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     volumes:
       - server_data:/app/data
       - server_uploads:/app/uploads

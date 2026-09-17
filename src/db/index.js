@@ -48,4 +48,22 @@ db.exec(`
   );
 `);
 
+// Eski (allaqachon yaratilgan) bazalarda yangi ustun bo'lmasligi mumkin —
+// CREATE TABLE IF NOT EXISTS eski jadvalni o'zgartirmaydi, shuning uchun
+// ustunlarni qo'lda qo'shamiz va ular allaqachon bor bo'lsa xatoni e'tiborsiz qoldiramiz.
+const extraColumns = [
+  'ALTER TABLE users ADD COLUMN push_token TEXT',
+  'ALTER TABLE users ADD COLUMN telegram_chat_id TEXT',
+  'ALTER TABLE users ADD COLUMN telegram_link_code TEXT',
+  'ALTER TABLE users ADD COLUMN last_active_at TEXT',
+  'ALTER TABLE users ADD COLUMN last_reminder_sent_at TEXT',
+];
+for (const sql of extraColumns) {
+  try {
+    db.exec(sql);
+  } catch (err) {
+    if (!/duplicate column/i.test(err.message)) throw err;
+  }
+}
+
 module.exports = db;
