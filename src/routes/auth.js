@@ -8,7 +8,7 @@ const { publicUser } = require('../utils/publicUser');
 const router = express.Router();
 
 const ACCESS_TOKEN_TTL = '15m';
-const REFRESH_TOKEN_TTL_DAYS = 30;
+const REFRESH_TOKEN_TTL_DAYS = 3650; // ~10 yil — foydalanuvchi bir marta kirsa, deyarli umrbod qayta kirmaydi
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -92,6 +92,9 @@ router.post('/refresh', (req, res) => {
     db.prepare('DELETE FROM refresh_tokens WHERE id = ?').run(row.id);
     return res.status(401).json({ error: 'Foydalanuvchi topilmadi' });
   }
+
+  const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare('UPDATE refresh_tokens SET expires_at = ? WHERE id = ?').run(newExpiresAt, row.id);
 
   const accessToken = issueAccessToken(user.id);
   res.json({ accessToken, user: publicUser(user, req) });
