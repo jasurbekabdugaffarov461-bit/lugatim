@@ -23,4 +23,12 @@ function authRequired(req, res, next) {
   }
 }
 
-module.exports = { authRequired };
+function adminRequired(req, res, next) {
+  const user = db.prepare('SELECT is_admin FROM users WHERE id = ?').get(req.userId);
+  if (!user || !user.is_admin) {
+    return res.status(403).json({ error: 'Ruxsat yo\'q' });
+  }
+  next();
+}
+
+module.exports = { authRequired, adminRequired };

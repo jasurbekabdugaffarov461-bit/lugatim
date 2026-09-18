@@ -12,6 +12,15 @@ const REFRESH_TOKEN_TTL_DAYS = 3650; // ~10 yil — foydalanuvchi bir marta kirs
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function ensureAdminFlag(user) {
+  const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  if (adminEmail && user.email === adminEmail && !user.is_admin) {
+    db.prepare('UPDATE users SET is_admin = 1 WHERE id = ?').run(user.id);
+    user.is_admin = 1;
+  }
+  return user;
+}
+
 function issueAccessToken(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
 }
@@ -46,7 +55,7 @@ router.post('/register', (req, res) => {
   const result = db
     .prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)')
     .run(normalizedEmail, passwordHash);
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+  const user = ensureAdminFlag(db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid));
 
   const accessToken = issueAccessToken(user.id);
   const refreshToken = issueRefreshToken(user.id);
@@ -65,6 +74,7 @@ router.post('/login', (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return res.status(401).json({ error: 'Email yoki parol noto\'g\'ri' });
   }
+  ensureAdminFlag(user);
 
   const accessToken = issueAccessToken(user.id);
   const refreshToken = issueRefreshToken(user.id);
@@ -92,6 +102,7 @@ router.post('/refresh', (req, res) => {
     db.prepare('DELETE FROM refresh_tokens WHERE id = ?').run(row.id);
     return res.status(401).json({ error: 'Foydalanuvchi topilmadi' });
   }
+  ensureAdminFlag(user);
 
   const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
   db.prepare('UPDATE refresh_tokens SET expires_at = ? WHERE id = ?').run(newExpiresAt, row.id);

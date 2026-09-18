@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const topicsRoutes = require('./routes/topics');
 const wordsRoutes = require('./routes/words');
 const usersRoutes = require('./routes/users');
+const adminRoutes = require('./routes/admin');
 const { router: telegramRoutes } = require('./routes/telegram');
 const { startReminderJob } = require('./jobs/reminders');
 const { startTelegramReminderJob } = require('./jobs/telegramReminders');
@@ -27,6 +28,7 @@ app.use('/api/topics', topicsRoutes);
 app.use('/api/words', wordsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Topilmadi' });

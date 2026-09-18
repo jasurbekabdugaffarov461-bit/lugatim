@@ -57,6 +57,7 @@ const extraColumns = [
   'ALTER TABLE users ADD COLUMN telegram_link_code TEXT',
   'ALTER TABLE users ADD COLUMN last_active_at TEXT',
   'ALTER TABLE users ADD COLUMN last_reminder_sent_at TEXT',
+  'ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0',
 ];
 for (const sql of extraColumns) {
   try {
