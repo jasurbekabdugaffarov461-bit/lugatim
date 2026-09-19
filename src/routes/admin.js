@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { authRequired, adminRequired } = require('../middleware/auth');
+const telegram = require('../lib/telegram');
 
 const router = express.Router();
 router.use(authRequired, adminRequired);
@@ -67,6 +68,25 @@ router.get('/topics/:id/words', (req, res) => {
     .all(topic.id);
 
   res.json({ topic, words });
+});
+
+// Telegram orqali bog'langan barcha foydalanuvchilarga bitta xabar yuborish
+router.post('/broadcast', async (req, res) => {
+  const text = String(req.body?.text || '').trim();
+  if (!text) {
+    return res.status(400).json({ error: 'Xabar matni bo\'sh bo\'lmasligi kerak' });
+  }
+  if (!telegram.isConfigured()) {
+    return res.status(400).json({ error: 'Telegram bot sozlanmagan' });
+  }
+
+  const recipients = db
+    .prepare('SELECT id, telegram_chat_id FROM users WHERE telegram_chat_id IS NOT NULL')
+    .all();
+
+  await Promise.all(recipients.map((u) => telegram.sendMessage(u.telegram_chat_id, text)));
+
+  res.json({ sent: recipients.length });
 });
 
 module.exports = router;
